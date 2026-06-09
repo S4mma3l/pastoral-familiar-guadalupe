@@ -246,13 +246,16 @@
       try {
         const { error } = await signInWithProvider(provider);
         if (error) {
-          errEl.innerHTML = '<span>Error al iniciar sesión: ' + escapeHtml(error.message) + '</span>';
+          console.error('[OAuth error]', error);
+          errEl.innerHTML = '<span>No se pudo iniciar sesión con ' + (provider === 'azure' ? 'Microsoft' : 'Google') + '. Intenta de nuevo.</span>';
           errEl.classList.remove('hidden');
           btnGoogle.disabled = false;
           btnAzure.disabled = false;
         }
+        // Si no hay error: el navegador ya está redirigiendo al proveedor — no hacer nada más
       } catch (err) {
-        errEl.innerHTML = '<span>Error de conexión. Recarga la página e intenta de nuevo.</span>';
+        console.error('[OAuth catch]', err);
+        errEl.innerHTML = '<span>Error al conectar. Recarga la página e intenta de nuevo.</span>';
         errEl.classList.remove('hidden');
         btnGoogle.disabled = false;
         btnAzure.disabled = false;
