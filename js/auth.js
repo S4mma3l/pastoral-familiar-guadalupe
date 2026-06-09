@@ -60,13 +60,23 @@ async function getProfile(userId) {
   return data;
 }
 
-// OAuth sign-in (Google, Microsoft/Azure, Apple)
+// OAuth sign-in (Google, Microsoft/Azure)
+// We bypass supabase.auth.signInWithOAuth entirely to avoid SDK-internal issues
+// (crypto.subtle, lock contention, flowType parsing) on Safari iOS.
+// Instead we build the GoTrue /authorize URL manually and do a direct redirect.
+// The callback is handled by auth-callback.html which calls setSession() with
+// the access_token returned in the URL hash (implicit flow from GoTrue).
 const OAUTH_REDIRECT = 'https://s4mma3l.github.io/pastoral-familiar-guadalupe/auth-callback.html';
 
 async function signInWithProvider(provider) {
   await ensureSupabase();
-  const options = { redirectTo: OAUTH_REDIRECT };
-  if (provider === 'azure') options.scopes = 'email profile';
-  const { data, error } = await supabase.auth.signInWithOAuth({ provider, options });
-  return { data, error };
+  const baseUrl = window.supabase.supabaseUrl;
+  const params = new URLSearchParams({
+    provider: provider,
+    redirect_to: OAUTH_REDIRECT,
+  });
+  if (provider === 'azure') params.set('scopes', 'email profile');
+  // Synchronous redirect — cannot throw
+  window.location.href = `${baseUrl}/auth/v1/authorize?${params.toString()}`;
+  return { data: null, error: null };
 }
