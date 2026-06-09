@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Admin — Pastoral Familiar</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body>
+
+  <nav class="topnav">
+    <div class="nav-brand">
+      <button class="btn-icon-circle" onclick="window.location.href='dashboard.html'" title="Volver">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <span class="nav-title">Panel Coordinador</span>
+    </div>
+    <div class="nav-actions">
+      <div id="nav-user"></div>
+      <button class="btn-icon-circle" title="Salir" onclick="handleLogout()">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <nav class="bottom-nav">
+    <button class="bnav-btn" onclick="window.location.href='feed.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Inicio
+    </button>
+    <button class="bnav-btn" onclick="window.location.href='dashboard.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Sesiones
+    </button>
+    <button class="bnav-new" onclick="window.location.href='feed.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="bnav-btn" onclick="window.location.href='profile.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </button>
+    <button class="bnav-btn active">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Admin
+    </button>
+  </nav>
+
+  <main class="page-wide" style="padding-bottom:calc(var(--btm) + 3rem)">
+    <div id="access-denied" class="empty-state hidden">
+      <span class="empty-icon">🔒</span>
+      <p>Acceso restringido a coordinadores.</p>
+      <button class="btn btn-primary" style="margin-top:1rem" onclick="window.location.href='feed.html'">Volver al inicio</button>
+    </div>
+
+    <div id="admin-content" class="hidden">
+
+      <!-- CREAR SESIÓN -->
+      <div class="admin-card">
+        <div class="admin-card-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Nueva sesión pastoral
+        </div>
+        <form id="form-session" onsubmit="handleCreateSession(event)" class="admin-form">
+          <div class="field-row">
+            <div class="field" style="flex:0 0 72px;min-width:72px">
+              <label>Emoji</label>
+              <input id="s-emoji" type="text" value="✝️" maxlength="4" style="font-size:1.5rem;text-align:center;padding:.45rem .3rem" />
+            </div>
+            <div class="field flex1">
+              <label>Título de la sesión *</label>
+              <input id="s-title" type="text" placeholder="Ej: Solemnidad de la Santísima Trinidad" required />
+            </div>
+          </div>
+          <div class="field">
+            <label>Descripción breve</label>
+            <input id="s-desc" type="text" placeholder="Un resumen corto para la tarjeta…" />
+          </div>
+          <div class="field">
+            <label>URL del video (YouTube o Vimeo)</label>
+            <input id="s-video" type="url" placeholder="https://www.youtube.com/watch?v=…" />
+          </div>
+          <div class="field">
+            <label>Contenido / Lectura <span class="hint">(texto normal, Enter para separar párrafos)</span></label>
+            <textarea id="s-content" rows="8" placeholder="Escribe el contenido de la guía familiar aquí. Cada párrafo separado con Enter."></textarea>
+          </div>
+          <div id="session-error" class="form-error hidden"></div>
+          <button type="submit" class="btn btn-primary" id="btn-create-session">Publicar sesión</button>
+        </form>
+      </div>
+
+      <!-- SESIONES PUBLICADAS -->
+      <div class="admin-card">
+        <div class="admin-card-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Sesiones publicadas
+        </div>
+        <div id="admin-sessions-list"><div class="mini-spin"></div></div>
+      </div>
+
+      <!-- GESTIÓN DE MIEMBROS -->
+      <div class="admin-card">
+        <div class="admin-card-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Gestión de miembros
+        </div>
+        <div class="search-row" style="margin-bottom:1rem">
+          <input id="user-search" type="text" placeholder="Buscar por apodo…" maxlength="30"
+            onkeydown="if(event.key==='Enter')searchUsers()" />
+          <button class="btn btn-primary btn-sm" onclick="searchUsers()">Buscar</button>
+        </div>
+        <div id="users-list"><div class="mini-spin"></div></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- OVERLAY: Editar sesión -->
+  <div id="modal-edit-session" class="overlay center hidden" onclick="closeEditSessionModal(event)">
+    <div class="sheet-center">
+      <div class="sheet-title">
+        <svg style="display:inline;vertical-align:-.15em;margin-right:.4rem" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--p)" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        Editar sesión
+      </div>
+      <input type="hidden" id="edit-s-id" />
+      <form onsubmit="handleUpdateSession(event)" class="admin-form">
+        <div class="field-row">
+          <div class="field" style="flex:0 0 72px;min-width:72px">
+            <label>Emoji</label>
+            <input id="edit-s-emoji" type="text" maxlength="4" style="font-size:1.5rem;text-align:center;padding:.45rem .3rem" />
+          </div>
+          <div class="field flex1">
+            <label>Título *</label>
+            <input id="edit-s-title" type="text" required />
+          </div>
+        </div>
+        <div class="field">
+          <label>Descripción breve</label>
+          <input id="edit-s-desc" type="text" placeholder="Un resumen corto…" />
+        </div>
+        <div class="field">
+          <label>URL del video (YouTube o Vimeo)</label>
+          <input id="edit-s-video" type="url" placeholder="https://www.youtube.com/watch?v=…" />
+        </div>
+        <div class="field">
+          <label>Contenido / Lectura <span class="hint">(texto normal, Enter para separar párrafos)</span></label>
+          <textarea id="edit-s-content" rows="7" placeholder="Escribe el contenido aquí. Cada párrafo separado con Enter."></textarea>
+        </div>
+        <div id="edit-session-error" class="form-error hidden"></div>
+        <div class="sheet-actions" style="justify-content:space-between">
+          <button type="button" class="btn btn-danger"
+            onclick="deleteSessionConfirm(document.getElementById('edit-s-id').value)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-.15em;margin-right:.25rem"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Eliminar
+          </button>
+          <div style="display:flex;gap:.5rem">
+            <button type="button" class="btn btn-ghost"
+              onclick="document.getElementById('modal-edit-session').classList.add('hidden')">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-update-session">Guardar cambios</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Agregar actividad -->
+  <div id="modal-activity" class="overlay center hidden" onclick="closeActivityModal(event)">
+    <div class="sheet-center">
+      <div class="sheet-title">Agregar actividad</div>
+      <input type="hidden" id="act-session-id" />
+      <form onsubmit="handleCreateActivity(event)" class="admin-form">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="act-type" onchange="onActivityTypeChange()">
+            <option value="reflection">Reflexión (texto libre)</option>
+            <option value="question">Pregunta abierta</option>
+            <option value="poll">Encuesta / votación</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Título / pregunta *</label>
+          <input id="act-title" type="text" placeholder="Escribe la pregunta o actividad…" required />
+        </div>
+        <div class="field">
+          <label>Descripción adicional</label>
+          <textarea id="act-content" rows="2" placeholder="Contexto o instrucción extra…"></textarea>
+        </div>
+        <div id="poll-options-group" class="field hidden">
+          <label>Opciones de la encuesta (una por línea)</label>
+          <textarea id="act-options" rows="4" placeholder="Opción A&#10;Opción B&#10;Opción C"></textarea>
+        </div>
+        <div id="act-error" class="form-error hidden"></div>
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-activity').classList.add('hidden')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Agregar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    let adminProfile = null;
+
+    (async () => {
+      const session = await requireAuth();
+      if (!session) return;
+      adminProfile = await getProfile(session.user.id);
+      if (!adminProfile.is_admin) {
+        document.getElementById('access-denied').classList.remove('hidden');
+        return;
+      }
+      const av = adminProfile.avatar_url
+        ? `<img src="${adminProfile.avatar_url}" />`
+        : adminProfile.nickname.charAt(0).toUpperCase();
+      document.getElementById('nav-user').innerHTML =
+        `<div class="avatar sm" style="background:${adminProfile.color}">${av}</div>
+         <span class="nav-nick">${escapeHtml(adminProfile.nickname)}</span>`;
+      document.getElementById('admin-content').classList.remove('hidden');
+      loadAdminSessions();
+      loadUsers();
+    })();
+
+    function onActivityTypeChange() {
+      const type = document.getElementById('act-type').value;
+      document.getElementById('poll-options-group').classList.toggle('hidden', type !== 'poll');
+    }
+
+    function openActivityModal(sessionId) {
+      document.getElementById('act-session-id').value = sessionId;
+      document.getElementById('act-title').value = '';
+      document.getElementById('act-content').value = '';
+      document.getElementById('act-options').value = '';
+      document.getElementById('act-error').classList.add('hidden');
+      document.getElementById('modal-activity').classList.remove('hidden');
+    }
+
+    function closeActivityModal(e) {
+      if (e.target === document.getElementById('modal-activity'))
+        document.getElementById('modal-activity').classList.add('hidden');
+    }
+
+    async function handleLogout() {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2700);
+    }
+  </script>
+</body>
+</html>

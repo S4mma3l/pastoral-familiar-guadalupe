@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Inicio — Pastoral Familiar</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="nav-brand">
+      <span class="nav-cross">✝</span>
+      <span class="nav-logo-text">Pastoral Familiar</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-icon-circle hidden" id="btn-admin" title="Admin" onclick="window.location.href='admin.html'">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div id="nav-user"></div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- STORIES -->
+    <div class="stories-header">
+      <span class="stories-header-label">Sesiones pastorales</span>
+      <a href="dashboard.html" class="stories-header-link">Ver todas →</a>
+    </div>
+    <div class="stories-scroll" id="stories-row">
+      <div class="story-item"><div class="story-ring-wrap"><div class="avatar lg skeleton" style="background:var(--bg-input)"></div></div><span class="story-label skeleton" style="width:52px;height:10px;border-radius:6px;display:block"></span></div>
+      <div class="story-item"><div class="story-ring-wrap"><div class="avatar lg skeleton" style="background:var(--bg-input)"></div></div><span class="story-label skeleton" style="width:52px;height:10px;border-radius:6px;display:block"></span></div>
+      <div class="story-item"><div class="story-ring-wrap"><div class="avatar lg skeleton" style="background:var(--bg-input)"></div></div><span class="story-label skeleton" style="width:52px;height:10px;border-radius:6px;display:block"></span></div>
+    </div>
+    <hr class="divider" style="margin:.1rem .75rem .75rem">
+
+    <!-- FEED -->
+    <div class="page" style="padding-top:0">
+      <div id="feed-list">
+        <div class="skeleton skel-post"></div>
+        <div class="skeleton skel-post"></div>
+      </div>
+      <div id="empty-feed" class="empty-state hidden">
+        <span class="empty-icon">🕊️</span>
+        <p>Sé el primero en compartir algo<br>con la comunidad.</p>
+        <button class="btn btn-primary" style="margin-top:1rem" onclick="openNewPost()">Crear publicación</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" onclick="window.location.href='feed.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Inicio
+    </button>
+    <button class="bnav-btn" onclick="window.location.href='dashboard.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Sesiones
+    </button>
+    <button class="bnav-new" onclick="openNewPost()" title="Nueva publicación">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="bnav-btn" onclick="window.location.href='profile.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </button>
+    <button class="bnav-btn hidden" id="bnav-admin" onclick="window.location.href='admin.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Admin
+    </button>
+  </nav>
+
+  <!-- SHEET: Nueva publicación -->
+  <div id="modal-newpost" class="overlay hidden" onclick="closeOnOverlay(event,'modal-newpost')">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Nueva publicación</div>
+      <div style="display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.85rem">
+        <div class="avatar md" id="modal-avatar" style="background:var(--p)">A</div>
+        <textarea id="post-content" placeholder="¿Qué querés compartir con la comunidad?" rows="4" maxlength="1000" style="flex:1;border-radius:12px"></textarea>
+      </div>
+
+      <!-- Image picker -->
+      <div id="img-preview-wrap" class="img-preview-wrap hidden">
+        <img id="img-preview" class="img-preview" src="" alt="preview" />
+        <button class="img-preview-remove" onclick="removePostImage()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="upload-zone" class="upload-zone" onclick="pickPostImage()">
+        <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Agregar imagen desde tu dispositivo
+      </div>
+
+      <div id="post-error" class="form-error hidden" style="margin:.75rem 0"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-newpost').classList.add('hidden')">Cancelar</button>
+        <button class="btn btn-primary" onclick="submitPost()">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Publicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHEET: Comentarios de post -->
+  <div id="modal-comments" class="overlay hidden" onclick="closeOnOverlay(event,'modal-comments')">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="modal-comments-title">Comentarios</div>
+      <div id="modal-comments-list" style="max-height:52vh;overflow-y:auto;margin-bottom:1rem"></div>
+      <div class="post-comment-input-row">
+        <div class="avatar sm" id="modal-comment-avatar" style="background:var(--p)">A</div>
+        <input id="modal-comment-input" type="text" placeholder="Escribe un comentario…" maxlength="500" onkeydown="if(event.key==='Enter')submitPostComment()" />
+        <button class="btn btn-primary btn-sm" onclick="submitPostComment()">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/feed.js"></script>
+  <script>
+    let currentProfile = null;
+    let activePostId = null;
+    window.postImageFile = null;
+
+    (async () => {
+      const session = await requireAuth();
+      if (!session) return;
+      currentProfile = await getProfile(session.user.id);
+      renderNav(currentProfile);
+      await loadStories();
+      await loadFeed();
+      subscribeToFeed();
+    })();
+
+    function renderNav(p) {
+      const av = p.avatar_url
+        ? `<img src="${p.avatar_url}" alt="${escapeHtml(p.nickname)}" />`
+        : p.nickname.charAt(0).toUpperCase();
+      document.getElementById('nav-user').innerHTML =
+        `<div class="avatar sm" style="background:${p.color};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
+      const ma = document.getElementById('modal-avatar');
+      if (p.avatar_url) { ma.innerHTML = `<img src="${p.avatar_url}" />`; } else { ma.textContent = p.nickname.charAt(0).toUpperCase(); }
+      ma.style.background = p.color;
+      const ca = document.getElementById('modal-comment-avatar');
+      if (p.avatar_url) { ca.innerHTML = `<img src="${p.avatar_url}" />`; } else { ca.textContent = p.nickname.charAt(0).toUpperCase(); }
+      ca.style.background = p.color;
+      if (p.is_admin) {
+        document.getElementById('btn-admin').classList.remove('hidden');
+        document.getElementById('bnav-admin').classList.remove('hidden');
+      }
+    }
+
+    function openNewPost() {
+      document.getElementById('post-content').value = '';
+      document.getElementById('post-error').classList.add('hidden');
+      removePostImage();
+      document.getElementById('modal-newpost').classList.remove('hidden');
+      setTimeout(() => document.getElementById('post-content').focus(), 200);
+    }
+
+    async function pickPostImage() {
+      const file = await pickImage();
+      if (!file) return;
+      window.postImageFile = file;
+      const url = URL.createObjectURL(file);
+      document.getElementById('img-preview').src = url;
+      document.getElementById('img-preview-wrap').classList.remove('hidden');
+      document.getElementById('upload-zone').classList.add('hidden');
+    }
+
+    function removePostImage() {
+      window.postImageFile = null;
+      const prev = document.getElementById('img-preview');
+      if (prev.src) URL.revokeObjectURL(prev.src);
+      prev.src = '';
+      document.getElementById('img-preview-wrap').classList.add('hidden');
+      document.getElementById('upload-zone').classList.remove('hidden');
+    }
+
+    function closeOnOverlay(e, id) {
+      if (e.target === document.getElementById(id))
+        document.getElementById(id).classList.add('hidden');
+    }
+
+    function openComments(postId, postNick) {
+      activePostId = postId;
+      document.getElementById('modal-comments-title').textContent = `Comentarios de ${postNick}`;
+      document.getElementById('modal-comments').classList.remove('hidden');
+      loadPostComments(postId);
+    }
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2700);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Pastoral Familiar — Parroquia de Guadalupe</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-logo-wrap">
+      <div class="auth-logo">✝</div>
+      <h1>Pastoral Familiar</h1>
+      <p>Parroquia de Guadalupe · San José, CR</p>
+    </div>
+
+    <!-- OAuth -->
+    <div class="oauth-section">
+      <button class="btn-oauth" onclick="handleOAuth('google')">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+        Continuar con Google
+      </button>
+      <button class="btn-oauth" onclick="handleOAuth('azure')">
+        <svg width="20" height="20" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+        Continuar con Microsoft
+      </button>
+    </div>
+
+    <div class="divider-or"><span>o usa un apodo</span></div>
+
+    <!-- Tab switcher -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-login" onclick="showTab('login')">Ingresar</button>
+      <button class="tab-btn" id="tab-register" onclick="showTab('register')">Registrarse</button>
+    </div>
+
+    <!-- Login -->
+    <form id="form-login" class="auth-form" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label for="login-nick">Apodo</label>
+        <input id="login-nick" type="text" placeholder="Ej: MariaG" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="login-pass">Contraseña</label>
+        <div class="input-with-toggle">
+          <input id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password" required />
+          <button type="button" class="toggle-pass" onclick="togglePass('login-pass',this)">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="login-error" class="form-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="btn-login">
+        <span class="btn-text">Ingresar</span>
+        <span class="btn-loading hidden">Ingresando…</span>
+      </button>
+      <p class="auth-switch-hint">¿Primera vez? <button type="button" class="link-btn" onclick="showTab('register')">Crear cuenta →</button></p>
+    </form>
+
+    <!-- Register -->
+    <form id="form-register" class="auth-form hidden" onsubmit="handleRegister(event)">
+      <div class="field">
+        <label for="reg-nick">Elige un apodo <span class="hint">(sin datos personales)</span></label>
+        <input id="reg-nick" type="text" placeholder="Ej: PedroF, AnaM" maxlength="30" autocomplete="username" required />
+        <small class="field-hint">Solo letras, números y guion bajo. Sin espacios.</small>
+      </div>
+      <div class="field">
+        <label for="reg-pass">Contraseña</label>
+        <div class="input-with-toggle">
+          <input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" minlength="6" required />
+          <button type="button" class="toggle-pass" onclick="togglePass('reg-pass',this)">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="reg-pass2">Confirmar contraseña</label>
+        <input id="reg-pass2" type="password" placeholder="Repite tu contraseña" autocomplete="new-password" required />
+      </div>
+      <div class="field">
+        <label>Color de tu avatar</label>
+        <div class="color-picker" id="color-picker">
+          <button type="button" class="color-dot selected" data-color="#D4581F" style="background:#D4581F"></button>
+          <button type="button" class="color-dot" data-color="#2C7A4B" style="background:#2C7A4B"></button>
+          <button type="button" class="color-dot" data-color="#2C4A7F" style="background:#2C4A7F"></button>
+          <button type="button" class="color-dot" data-color="#7B4A9C" style="background:#7B4A9C"></button>
+          <button type="button" class="color-dot" data-color="#B8860B" style="background:#B8860B"></button>
+          <button type="button" class="color-dot" data-color="#8B3252" style="background:#8B3252"></button>
+        </div>
+      </div>
+      <div id="reg-error" class="form-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="btn-register">
+        <span class="btn-text">Crear cuenta</span>
+        <span class="btn-loading hidden">Creando…</span>
+      </button>
+      <p class="auth-switch-hint">¿Ya tienes cuenta? <button type="button" class="link-btn" onclick="showTab('login')">Ingresar →</button></p>
+      <p class="privacy-note">No guardamos ningún dato personal. Solo tu apodo y contraseña.</p>
+    </form>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    let selectedColor = '#D4581F';
+
+    function showTab(tab) {
+      document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    }
+
+    function togglePass(id, btn) {
+      const inp = document.getElementById(id);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    document.getElementById('color-picker').addEventListener('click', e => {
+      const dot = e.target.closest('.color-dot');
+      if (!dot) return;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+      selectedColor = dot.dataset.color;
+    });
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-login');
+      const errEl = document.getElementById('login-error');
+      setLoading(btn, true);
+      errEl.classList.add('hidden');
+      const { error } = await signIn(
+        document.getElementById('login-nick').value.trim(),
+        document.getElementById('login-pass').value
+      );
+      if (error) {
+        errEl.innerHTML = '<span>Apodo o contraseña incorrectos. Intenta de nuevo.</span>';
+        errEl.classList.remove('hidden');
+        setLoading(btn, false);
+      } else {
+        window.location.href = 'feed.html';
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-register');
+      const errEl = document.getElementById('reg-error');
+      const nick = document.getElementById('reg-nick').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const pass2 = document.getElementById('reg-pass2').value;
+      errEl.classList.add('hidden');
+      if (pass !== pass2) {
+        errEl.innerHTML = '<span>Las contraseñas no coinciden.</span>';
+        errEl.classList.remove('hidden'); return;
+      }
+      if (!/^[a-zA-Z0-9_]{3,30}$/.test(nick)) {
+        errEl.innerHTML = '<span>Solo letras, números y guion bajo (3–30 caracteres).</span>';
+        errEl.classList.remove('hidden'); return;
+      }
+      setLoading(btn, true);
+      const { error } = await signUp(nick, pass, selectedColor);
+      if (error) {
+        errEl.innerHTML = `<span>${error.message?.includes('already') ? 'Ese apodo ya está en uso. Elige otro.' : 'Error al crear la cuenta. Intenta de nuevo.'}</span>`;
+        errEl.classList.remove('hidden');
+        setLoading(btn, false);
+      } else {
+        window.location.href = 'feed.html';
+      }
+    }
+
+    async function handleOAuth(provider) {
+      const { error } = await signInWithProvider(provider);
+      if (error) alert('Error al iniciar sesión: ' + error.message);
+    }
+
+    function setLoading(btn, loading) {
+      btn.querySelector('.btn-text').classList.toggle('hidden', loading);
+      btn.querySelector('.btn-loading').classList.toggle('hidden', !loading);
+      btn.disabled = loading;
+    }
+
+    (async () => {
+      const session = await getSession();
+      if (session) window.location.href = 'feed.html';
+    })();
+  </script>
+</body>
+</html>

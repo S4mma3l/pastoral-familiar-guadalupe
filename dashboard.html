@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Sesiones — Pastoral Familiar</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body>
+
+  <nav class="topnav">
+    <div class="nav-brand">
+      <span class="nav-cross">✝</span>
+      <span class="nav-logo-text">Sesiones Pastorales</span>
+    </div>
+    <div class="nav-actions">
+      <div id="nav-user"></div>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="welcome-card hidden" id="welcome-card">
+      <h2 id="welcome-msg">Bienvenido</h2>
+      <p>Abre una sesión, mira el video y participa con tu comunidad.</p>
+    </div>
+
+    <div class="section-head">Sesiones disponibles</div>
+    <div id="sessions-list">
+      <div class="skeleton skel-card"></div>
+      <div class="skeleton skel-card"></div>
+      <div class="skeleton skel-card"></div>
+    </div>
+    <div id="no-sessions" class="empty-state hidden">
+      <span class="empty-icon">📖</span>
+      <p>Aún no hay sesiones publicadas.<br>¡Vuelve pronto!</p>
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="bnav-btn" onclick="window.location.href='feed.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Inicio
+    </button>
+    <button class="bnav-btn active" onclick="window.location.href='dashboard.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Sesiones
+    </button>
+    <button class="bnav-new" onclick="window.location.href='feed.html'" title="Nueva publicación">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="bnav-btn" onclick="window.location.href='profile.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </button>
+    <button class="bnav-btn hidden" id="bnav-admin" onclick="window.location.href='admin.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Admin
+    </button>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async () => {
+      const session = await requireAuth();
+      if (!session) return;
+      const profile = await getProfile(session.user.id);
+
+      const av = profile.avatar_url
+        ? `<img src="${profile.avatar_url}" />`
+        : profile.nickname.charAt(0).toUpperCase();
+      document.getElementById('nav-user').innerHTML =
+        `<div class="avatar sm" style="background:${profile.color};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
+
+      document.getElementById('welcome-msg').textContent = `Hola, ${profile.nickname} 👋`;
+      document.getElementById('welcome-card').classList.remove('hidden');
+      if (profile.is_admin) document.getElementById('bnav-admin').classList.remove('hidden');
+      loadSessions();
+    })();
+
+    async function loadSessions() {
+      const { data, error } = await supabase
+        .from('sessions').select('*').order('created_at', { ascending: false });
+      const list = document.getElementById('sessions-list');
+      const empty = document.getElementById('no-sessions');
+      list.innerHTML = '';
+      if (error || !data?.length) { empty.classList.remove('hidden'); return; }
+      data.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'session-list-card';
+        card.onclick = () => window.location.href = `session.html?id=${s.id}`;
+        card.innerHTML = `
+          <div class="session-card-emoji">${s.cover_emoji || '✝️'}</div>
+          <div class="session-card-body">
+            <div class="session-card-title">${escapeHtml(s.title)}</div>
+            ${s.description ? `<div class="session-card-desc">${escapeHtml(s.description)}</div>` : ''}
+            <span class="session-card-date">${formatDate(s.created_at)}</span>
+          </div>
+          <div class="session-card-arrow">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>

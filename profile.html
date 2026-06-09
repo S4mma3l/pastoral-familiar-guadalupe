@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Perfil — Pastoral Familiar</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body>
+
+  <nav class="topnav">
+    <div class="nav-brand">
+      <button class="btn-icon-circle" onclick="history.back()" title="Volver">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <span class="nav-title" id="nav-profile-title">Perfil</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-icon-circle" id="btn-logout" title="Cerrar sesión" onclick="handleLogout()">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div id="profile-main">
+    <div class="loading-state"><div class="spinner"></div></div>
+  </div>
+
+  <!-- SHEET: Detalle de publicación -->
+  <div id="modal-post-detail" class="overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="post-detail-author">Publicación</div>
+      <div id="post-detail-image-wrap" class="img-preview-wrap hidden" style="margin-bottom:.75rem">
+        <img id="post-detail-image" class="img-preview" src="" alt="imagen" style="border-radius:var(--r2)" />
+      </div>
+      <p id="post-detail-content" style="font-size:.96rem;line-height:1.65;color:var(--ink);white-space:pre-wrap;word-break:break-word;margin-bottom:1.25rem"></p>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-post-detail').classList.add('hidden')">Cerrar</button>
+        <button id="post-detail-delete" class="btn btn-danger-solid hidden" onclick="deletePostFromProfile()">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHEET: Nueva publicación -->
+  <div id="modal-newpost-p" class="overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Nueva publicación</div>
+      <div style="display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.85rem">
+        <div class="avatar md" id="modal-post-avatar" style="background:var(--p)">A</div>
+        <textarea id="post-content-p" placeholder="¿Qué querés compartir con la comunidad?" rows="4" maxlength="1000" style="flex:1;border-radius:12px"></textarea>
+      </div>
+      <div id="img-preview-wrap-p" class="img-preview-wrap hidden">
+        <img id="img-preview-p" class="img-preview" src="" alt="preview" />
+        <button class="img-preview-remove" onclick="removePostImageProfile()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="upload-zone-p" class="upload-zone" onclick="pickPostImageProfile()">
+        <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Agregar imagen desde tu dispositivo
+      </div>
+      <div id="post-error-p" class="form-error hidden" style="margin:.75rem 0"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-newpost-p').classList.add('hidden')">Cancelar</button>
+        <button class="btn btn-primary" onclick="submitProfilePost()">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Publicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHEET: Editar perfil -->
+  <div id="modal-edit" class="overlay hidden" onclick="closeEditOnOverlay(event)">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Editar perfil</div>
+
+      <!-- Avatar upload -->
+      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.25rem">
+        <div style="position:relative;display:inline-block;cursor:pointer" onclick="pickEditAvatar()">
+          <div class="avatar xl" id="edit-avatar-preview" style="background:var(--p)">A</div>
+          <div style="position:absolute;bottom:2px;right:2px;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--p-light),var(--p-dark));border:2.5px solid #fff;display:flex;align-items:center;justify-content:center">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+        </div>
+        <p style="font-size:.76rem;color:var(--ink-3);margin-top:.5rem">Toca para cambiar foto</p>
+        <div class="mini-spin hidden" id="avatar-uploading"></div>
+      </div>
+
+      <div class="auth-form">
+        <div class="field">
+          <label>Biografía</label>
+          <textarea id="edit-bio" rows="3" placeholder="Cuéntale algo a la comunidad…" maxlength="200"></textarea>
+          <small class="field-hint">Máximo 200 caracteres. No uses datos personales.</small>
+        </div>
+        <div class="field">
+          <label>Color de tu avatar</label>
+          <div class="color-picker" id="edit-color-picker">
+            <button type="button" class="color-dot" data-color="#D4581F" style="background:#D4581F"></button>
+            <button type="button" class="color-dot" data-color="#2C7A4B" style="background:#2C7A4B"></button>
+            <button type="button" class="color-dot" data-color="#2C4A7F" style="background:#2C4A7F"></button>
+            <button type="button" class="color-dot" data-color="#7B4A9C" style="background:#7B4A9C"></button>
+            <button type="button" class="color-dot" data-color="#B8860B" style="background:#B8860B"></button>
+            <button type="button" class="color-dot" data-color="#8B3252" style="background:#8B3252"></button>
+          </div>
+        </div>
+        <div id="edit-error" class="form-error hidden"></div>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-edit').classList.add('hidden')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveProfile()">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="bnav-btn" onclick="window.location.href='feed.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Inicio
+    </button>
+    <button class="bnav-btn" onclick="window.location.href='dashboard.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Sesiones
+    </button>
+    <button class="bnav-new" onclick="openNewPostModal()" title="Nueva publicación">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="bnav-btn active" onclick="window.location.href='profile.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </button>
+    <button class="bnav-btn hidden" id="bnav-admin" onclick="window.location.href='admin.html'">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Admin
+    </button>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script>
+    let currentProfile = null;
+    let viewingProfile = null;
+    let isSelf = false;
+    let editColor = '#D4581F';
+    let pendingAvatarFile = null;
+
+    (async () => {
+      const session = await requireAuth();
+      if (!session) return;
+      currentProfile = await getProfile(session.user.id);
+
+      const params = new URLSearchParams(window.location.search);
+      const targetId = params.get('id') || session.user.id;
+      isSelf = targetId === session.user.id;
+
+      if (!isSelf) document.getElementById('btn-logout').style.display = 'none';
+      if (currentProfile.is_admin) document.getElementById('bnav-admin').classList.remove('hidden');
+
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', targetId).single();
+      if (!profile) { window.location.href = 'feed.html'; return; }
+      viewingProfile = profile;
+
+      document.title = `${profile.nickname} — Pastoral Familiar`;
+      document.getElementById('nav-profile-title').textContent = profile.nickname;
+
+      const { data: posts } = await supabase
+        .from('posts').select('*').eq('user_id', profile.id).order('created_at', { ascending: false });
+      const postCount = posts?.length || 0;
+
+      window._profilePosts = posts || [];
+      renderProfile(profile, posts || [], postCount);
+    })();
+
+    function avatarHtml(p, cls) {
+      return p.avatar_url
+        ? `<div class="avatar ${cls}" style="background:${p.color}"><img src="${escapeHtml(p.avatar_url)}" /></div>`
+        : `<div class="avatar ${cls}" style="background:${p.color}">${p.nickname.charAt(0).toUpperCase()}</div>`;
+    }
+
+    function renderProfile(profile, posts, postCount) {
+      const main = document.getElementById('profile-main');
+      main.innerHTML = `
+        <div class="profile-cover"></div>
+        <div class="profile-avatar-wrap">
+          ${isSelf
+            ? `<div class="profile-avatar-edit-btn" onclick="openEditModal()">
+                ${avatarHtml(profile, 'xl')}
+                <div class="edit-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+               </div>`
+            : avatarHtml(profile, 'xl')}
+          ${isSelf
+            ? `<button class="btn btn-ghost btn-sm" onclick="openEditModal()">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                Editar perfil
+               </button>`
+            : '<div></div>'}
+        </div>
+
+        <div class="profile-info">
+          <div class="profile-nick">${escapeHtml(profile.nickname)}</div>
+          ${profile.bio ? `<div class="profile-bio">${escapeHtml(profile.bio)}</div>` : isSelf ? `<div class="profile-bio" style="font-style:italic;color:var(--ink-3)">Agrega una biografía…</div>` : ''}
+          ${profile.is_admin ? `<div class="profile-admin-badge">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+            Coordinador
+          </div>` : ''}
+        </div>
+
+        <div class="profile-stats">
+          <div>
+            <div class="stat-num">${postCount}</div>
+            <div class="stat-label">publicaciones</div>
+          </div>
+        </div>
+
+        ${posts.length === 0
+          ? `<div class="empty-state">
+               <span class="empty-icon">📝</span>
+               <p>${isSelf ? 'Aún no tienes publicaciones.' : 'Este miembro aún no ha publicado.'}</p>
+               ${isSelf ? '<button class="btn btn-primary" style="margin-top:1rem" onclick="openNewPostModal()">Crear primera publicación</button>' : ''}
+             </div>`
+          : `<div class="profile-grid" id="profile-grid">
+               ${posts.map(p =>
+                 `<div class="profile-grid-tile" onclick="openPostDetail('${p.id}')">
+                   ${p.image_url
+                     ? `<img src="${escapeHtml(p.image_url)}" alt="post" loading="lazy" onerror="this.style.display='none'" />`
+                     : `<div class="profile-grid-text-tile">${escapeHtml(p.content.substring(0, 80))}${p.content.length > 80 ? '…' : ''}</div>`}
+                 </div>`).join('')}
+             </div>`}
+      `;
+    }
+
+    let activeDetailPostId = null;
+
+    function openPostDetail(postId) {
+      const post = (window._profilePosts || []).find(p => p.id === postId);
+      if (!post) return;
+      activeDetailPostId = postId;
+
+      const canDelete = isSelf || currentProfile?.is_admin;
+      document.getElementById('post-detail-author').textContent = viewingProfile?.nickname || 'Publicación';
+      document.getElementById('post-detail-content').textContent = post.content || '';
+
+      const imgWrap = document.getElementById('post-detail-image-wrap');
+      const img = document.getElementById('post-detail-image');
+      if (post.image_url) { img.src = post.image_url; imgWrap.classList.remove('hidden'); }
+      else { imgWrap.classList.add('hidden'); }
+
+      const delBtn = document.getElementById('post-detail-delete');
+      if (canDelete) { delBtn.classList.remove('hidden'); } else { delBtn.classList.add('hidden'); }
+      document.getElementById('modal-post-detail').classList.remove('hidden');
+    }
+
+    function deletePostFromProfile() {
+      if (!activeDetailPostId) return;
+      showConfirm({ message: '¿Eliminar esta publicación?', confirmText: 'Eliminar', danger: true }, async () => {
+        await supabase.from('posts').delete().eq('id', activeDetailPostId);
+        document.getElementById('modal-post-detail').classList.add('hidden');
+        showToast('Publicación eliminada');
+        window.location.reload();
+      });
+    }
+
+    window.profilePostImageFile = null;
+
+    function openNewPostModal() {
+      const p = currentProfile;
+      if (!p) return;
+      const ma = document.getElementById('modal-post-avatar');
+      if (p.avatar_url) { ma.innerHTML = '<img src="' + escapeHtml(p.avatar_url) + '" />'; }
+      else { ma.textContent = p.nickname.charAt(0).toUpperCase(); }
+      ma.style.background = p.color;
+      document.getElementById('post-content-p').value = '';
+      document.getElementById('post-error-p').classList.add('hidden');
+      document.getElementById('img-preview-wrap-p').classList.add('hidden');
+      document.getElementById('upload-zone-p').classList.remove('hidden');
+      window.profilePostImageFile = null;
+      document.getElementById('modal-newpost-p').classList.remove('hidden');
+      setTimeout(() => document.getElementById('post-content-p').focus(), 200);
+    }
+
+    async function pickPostImageProfile() {
+      const file = await pickImage();
+      if (!file) return;
+      window.profilePostImageFile = file;
+      const url = URL.createObjectURL(file);
+      document.getElementById('img-preview-p').src = url;
+      document.getElementById('img-preview-wrap-p').classList.remove('hidden');
+      document.getElementById('upload-zone-p').classList.add('hidden');
+    }
+
+    function removePostImageProfile() {
+      window.profilePostImageFile = null;
+      document.getElementById('img-preview-wrap-p').classList.add('hidden');
+      document.getElementById('upload-zone-p').classList.remove('hidden');
+    }
+
+    async function submitProfilePost() {
+      const content = document.getElementById('post-content-p').value.trim();
+      const errEl = document.getElementById('post-error-p');
+      errEl.classList.add('hidden');
+
+      if (!content) {
+        errEl.innerHTML = '<span>Escribe algo antes de publicar.</span>';
+        errEl.classList.remove('hidden'); return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      let imageUrl = null;
+
+      if (window.profilePostImageFile) {
+        try {
+          imageUrl = await uploadPostImage(window.profilePostImageFile, session.user.id);
+        } catch (e) {
+          errEl.innerHTML = '<span>Error al subir la imagen: ' + escapeHtml(e.message) + '</span>';
+          errEl.classList.remove('hidden'); return;
+        }
+      }
+
+      const { error } = await supabase.from('posts').insert({
+        user_id: session.user.id,
+        content,
+        image_url: imageUrl
+      });
+
+      if (error) {
+        errEl.innerHTML = '<span>Error al publicar. Intenta de nuevo.</span>';
+        errEl.classList.remove('hidden'); return;
+      }
+
+      document.getElementById('modal-newpost-p').classList.add('hidden');
+      showToast('Publicación compartida ✓');
+      window.location.reload();
+    }
+
+    function openEditModal() {
+      if (!isSelf) return;
+      const p = viewingProfile;
+      editColor = p.color || '#D4581F';
+
+      // Set avatar preview
+      const ap = document.getElementById('edit-avatar-preview');
+      if (p.avatar_url) { ap.innerHTML = `<img src="${escapeHtml(p.avatar_url)}" />`; } else { ap.textContent = p.nickname.charAt(0).toUpperCase(); }
+      ap.style.background = p.color;
+
+      document.getElementById('edit-bio').value = p.bio || '';
+      document.querySelectorAll('#edit-color-picker .color-dot').forEach(d => {
+        d.classList.toggle('selected', d.dataset.color === editColor);
+      });
+      document.getElementById('edit-error').classList.add('hidden');
+      pendingAvatarFile = null;
+      document.getElementById('modal-edit').classList.remove('hidden');
+    }
+
+    document.getElementById('edit-color-picker').addEventListener('click', e => {
+      const dot = e.target.closest('.color-dot');
+      if (!dot) return;
+      document.querySelectorAll('#edit-color-picker .color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+      editColor = dot.dataset.color;
+      const ap = document.getElementById('edit-avatar-preview');
+      ap.style.background = editColor;
+    });
+
+    async function pickEditAvatar() {
+      const file = await pickImage();
+      if (!file) return;
+      pendingAvatarFile = file;
+      const url = URL.createObjectURL(file);
+      const ap = document.getElementById('edit-avatar-preview');
+      ap.innerHTML = `<img src="${url}" />`;
+    }
+
+    async function saveProfile() {
+      const errEl = document.getElementById('edit-error');
+      errEl.classList.add('hidden');
+
+      let avatarUrl = viewingProfile.avatar_url || null;
+      if (pendingAvatarFile) {
+        document.getElementById('avatar-uploading').classList.remove('hidden');
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          avatarUrl = await uploadAvatar(pendingAvatarFile, session.user.id);
+        } catch (e) {
+          errEl.innerHTML = `<span>Error al subir la foto: ${e.message}</span>`;
+          errEl.classList.remove('hidden');
+          document.getElementById('avatar-uploading').classList.add('hidden');
+          return;
+        }
+        document.getElementById('avatar-uploading').classList.add('hidden');
+      }
+
+      const bio = document.getElementById('edit-bio').value.trim();
+      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.from('profiles').update({
+        bio: bio || null,
+        color: editColor,
+        avatar_url: avatarUrl
+      }).eq('id', session.user.id);
+
+      if (error) {
+        errEl.innerHTML = `<span>Error al guardar. Intenta de nuevo.</span>`;
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('modal-edit').classList.add('hidden');
+      // Reload
+      window.location.reload();
+    }
+
+    function closeEditOnOverlay(e) {
+      if (e.target === document.getElementById('modal-edit'))
+        document.getElementById('modal-edit').classList.add('hidden');
+    }
+
+    async function handleLogout() {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

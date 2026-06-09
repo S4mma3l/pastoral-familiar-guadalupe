@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ingresando… — Pastoral Familiar</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body class="auth-page">
+
+  <!-- Estado: procesando -->
+  <div id="state-loading" style="text-align:center;padding:3rem 1.5rem">
+    <div class="auth-card" style="max-width:340px;margin:0 auto;padding:2.5rem 2rem">
+      <div class="auth-logo-wrap">
+        <div class="auth-logo">✝</div>
+        <h2 style="font-size:1.15rem;margin-top:.5rem">Verificando acceso…</h2>
+      </div>
+      <div class="spinner" style="margin:1.5rem auto"></div>
+    </div>
+  </div>
+
+  <!-- Estado: elegir apodo (primera vez con OAuth) -->
+  <div id="state-nickname" class="hidden">
+    <div class="auth-card">
+      <div class="auth-logo-wrap">
+        <div class="auth-logo">✝</div>
+        <h1>¡Bienvenido!</h1>
+        <p>Elige un apodo para aparecer en la comunidad</p>
+      </div>
+      <form onsubmit="handleNicknameSetup(event)" class="auth-form">
+        <div class="field">
+          <label for="setup-nick">Tu apodo <span class="hint">(sin datos personales)</span></label>
+          <input id="setup-nick" type="text" placeholder="Ej: MariaG, PedroF" maxlength="30" required autofocus />
+          <small class="field-hint">Solo letras, números y guion bajo. Sin espacios.</small>
+        </div>
+        <div class="field">
+          <label>Color de tu avatar</label>
+          <div class="color-picker" id="setup-color-picker">
+            <button type="button" class="color-dot selected" data-color="#D4581F" style="background:#D4581F"></button>
+            <button type="button" class="color-dot" data-color="#2C7A4B" style="background:#2C7A4B"></button>
+            <button type="button" class="color-dot" data-color="#2C4A7F" style="background:#2C4A7F"></button>
+            <button type="button" class="color-dot" data-color="#7B4A9C" style="background:#7B4A9C"></button>
+            <button type="button" class="color-dot" data-color="#B8860B" style="background:#B8860B"></button>
+            <button type="button" class="color-dot" data-color="#8B3252" style="background:#8B3252"></button>
+          </div>
+        </div>
+        <div id="setup-error" class="form-error hidden"></div>
+        <button type="submit" class="btn btn-primary btn-full">Continuar</button>
+        <p class="privacy-note">Tu apodo es lo único que verán los demás.</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Estado: error -->
+  <div id="state-error" class="hidden" style="text-align:center;padding:3rem 1.5rem">
+    <div class="auth-card" style="max-width:380px;margin:0 auto">
+      <div class="auth-logo-wrap">
+        <div class="auth-logo" style="background:linear-gradient(135deg,#e55,#b00)">!</div>
+        <h2 style="margin-top:.75rem">Algo salió mal</h2>
+        <p id="error-msg" style="color:var(--ink-2);font-size:.88rem;margin-top:.35rem"></p>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="window.location.href='index.html'">Volver al inicio</button>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    let oauthUserId = null;
+    let setupColor = '#D4581F';
+
+    document.getElementById('setup-color-picker').addEventListener('click', e => {
+      const dot = e.target.closest('.color-dot');
+      if (!dot) return;
+      document.querySelectorAll('#setup-color-picker .color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+      setupColor = dot.dataset.color;
+    });
+
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const hash   = new URLSearchParams(window.location.hash.replace('#', '?').slice(1));
+
+      const urlError = params.get('error') || hash.get('error');
+      if (urlError) {
+        showError(decodeURIComponent(params.get('error_description') || hash.get('error_description') || urlError));
+        return;
+      }
+
+      const code        = params.get('code');
+      const accessToken = hash.get('access_token');
+
+      try {
+        let session = null;
+
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          if (error) throw error;
+          session = data.session;
+        } else if (accessToken) {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          session = data.session;
+          if (!session) {
+            const { data: d2, error: e2 } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: hash.get('refresh_token') || ''
+            });
+            if (e2) throw e2;
+            session = d2.session;
+          }
+        } else {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          session = data.session;
+        }
+
+        if (!session) {
+          showError('No se pudo completar el ingreso. Intenta de nuevo desde la página principal.');
+          return;
+        }
+
+        oauthUserId = session.user.id;
+        window.history.replaceState({}, '', window.location.pathname);
+
+        const { data: profile } = await supabase
+          .from('profiles').select('id, nickname').eq('id', oauthUserId).maybeSingle();
+
+        if (profile?.nickname) {
+          window.location.href = 'feed.html';
+        } else {
+          showState('nickname');
+        }
+
+      } catch (err) {
+        console.error('OAuth callback error:', err);
+        showError(err.message || 'Error al ingresar. Intenta de nuevo.');
+      }
+    }
+
+    async function handleNicknameSetup(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('setup-error');
+      const nick  = document.getElementById('setup-nick').value.trim();
+      errEl.classList.add('hidden');
+
+      if (!/^[a-zA-Z0-9_]{3,30}$/.test(nick)) {
+        errEl.innerHTML = '<span>Solo letras, números y guion bajo (3–30 caracteres).</span>';
+        errEl.classList.remove('hidden'); return;
+      }
+
+      const { data: existing } = await supabase.from('profiles').select('id').eq('nickname', nick).maybeSingle();
+      if (existing) {
+        errEl.innerHTML = '<span>Ese apodo ya está en uso. Elige otro.</span>';
+        errEl.classList.remove('hidden'); return;
+      }
+
+      const { error } = await supabase.from('profiles').upsert({ id: oauthUserId, nickname: nick, color: setupColor });
+      if (error) {
+        errEl.innerHTML = '<span>Error al guardar el apodo. Intenta de nuevo.</span>';
+        errEl.classList.remove('hidden'); return;
+      }
+      window.location.href = 'feed.html';
+    }
+
+    function showState(state) {
+      ['loading', 'nickname', 'error'].forEach(s =>
+        document.getElementById(`state-${s}`).classList.toggle('hidden', s !== state)
+      );
+    }
+
+    function showError(msg) {
+      document.getElementById('error-msg').textContent = msg;
+      showState('error');
+    }
+
+    init();
+  </script>
+</body>
+</html>
