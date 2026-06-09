@@ -216,7 +216,9 @@ async function submitPost() {
 
 async function deletePost(postId) {
   showConfirm({ message: '¿Eliminar esta publicación?', confirmText: 'Eliminar', danger: true }, async () => {
+    const { data: post } = await supabase.from('posts').select('image_url').eq('id', postId).single();
     await supabase.from('posts').delete().eq('id', postId);
+    if (post?.image_url) await deleteStorageFile(post.image_url);
     document.getElementById(`post-${postId}`)?.remove();
     showToast('Publicación eliminada');
   });

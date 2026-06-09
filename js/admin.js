@@ -233,9 +233,14 @@ function deleteUser(userId, nickname) {
 
 async function performDeleteUser(userId, nickname) {
   try {
+    // Collect storage files before deleting DB records
+    const [{ data: userPosts }, { data: userProfile }] = await Promise.all([
+      supabase.from('posts').select('id, image_url').eq('user_id', userId),
+      supabase.from('profiles').select('avatar_url').eq('id', userId).single()
+    ]);
+
     await supabase.from('activity_responses').delete().eq('user_id', userId);
     await supabase.from('comment_likes').delete().eq('user_id', userId);
-    const { data: userPosts } = await supabase.from('posts').select('id').eq('user_id', userId);
     if (userPosts?.length) {
       const ids = userPosts.map(p => p.id);
       await supabase.from('post_likes').delete().in('post_id', ids);
@@ -246,6 +251,15 @@ async function performDeleteUser(userId, nickname) {
     await supabase.from('comments').delete().eq('user_id', userId);
     await supabase.from('posts').delete().eq('user_id', userId);
     await supabase.from('profiles').delete().eq('id', userId);
+
+    // Delete storage files after DB records are gone
+    if (typeof deleteStorageFile === 'function') {
+      const deleteJobs = (userPosts || [])
+        .filter(p => p.image_url)
+        .map(p => deleteStorageFile(p.image_url));
+      if (userProfile?.avatar_url) deleteJobs.push(deleteStorageFile(userProfile.avatar_url));
+      await Promise.all(deleteJobs);
+    }
     if (typeof showToast === 'function') showToast(`${nickname} fue eliminado`);
     const nick = document.getElementById('user-search')?.value.trim();
     if (nick) searchUsers(); else loadUsers();

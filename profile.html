@@ -263,7 +263,9 @@
     function deletePostFromProfile() {
       if (!activeDetailPostId) return;
       showConfirm({ message: '¿Eliminar esta publicación?', confirmText: 'Eliminar', danger: true }, async () => {
+        const post = (window._profilePosts || []).find(p => p.id === activeDetailPostId);
         await supabase.from('posts').delete().eq('id', activeDetailPostId);
+        if (post?.image_url) await deleteStorageFile(post.image_url);
         document.getElementById('modal-post-detail').classList.add('hidden');
         showToast('Publicación eliminada');
         window.location.reload();

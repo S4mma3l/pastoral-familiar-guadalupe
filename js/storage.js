@@ -48,6 +48,20 @@ async function uploadPostImage(file, userId) {
   return uploadImage(file, 'post-images', userId);
 }
 
+// Delete a file from Supabase Storage given its public URL
+async function deleteStorageFile(url) {
+  if (!url || !url.includes('/storage/v1/object/public/')) return;
+  try {
+    const after = url.split('/storage/v1/object/public/')[1]?.split('?')[0];
+    if (!after) return;
+    const slash = after.indexOf('/');
+    if (slash === -1) return;
+    const bucket = after.slice(0, slash);
+    const path   = after.slice(slash + 1);
+    await supabase.storage.from(bucket).remove([path]);
+  } catch (_) { /* silently ignore — record deletion is more important */ }
+}
+
 // Show a file-picker and return the selected File
 function pickImage(accept = 'image/*') {
   return new Promise(resolve => {

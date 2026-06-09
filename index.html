@@ -98,8 +98,58 @@
         <span class="btn-loading hidden">Creando…</span>
       </button>
       <p class="auth-switch-hint">¿Ya tienes cuenta? <button type="button" class="link-btn" onclick="showTab('login')">Ingresar →</button></p>
-      <p class="privacy-note">No guardamos ningún dato personal. Solo tu apodo y contraseña.</p>
+      <p class="privacy-note">Al crear una cuenta aceptas nuestras <button type="button" class="link-btn" onclick="document.getElementById('modal-policy').classList.remove('hidden')">políticas de uso</button>.</p>
     </form>
+  </div>
+
+  <!-- Modal: Política de uso y privacidad -->
+  <div id="modal-policy" class="overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')" role="dialog" aria-modal="true" aria-label="Política de uso">
+    <div class="sheet" style="max-height:85vh;overflow-y:auto">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Política de uso y privacidad</div>
+
+      <p style="font-size:.9rem;color:var(--ink-2);margin-bottom:1rem">
+        Esta aplicación es de uso exclusivo para los miembros de la <strong>Pastoral Familiar de la Parroquia de Guadalupe</strong>, San José, Costa Rica.
+      </p>
+
+      <h4 style="font-size:.88rem;font-weight:600;margin:.75rem 0 .35rem">¿Qué información guardamos?</h4>
+      <ul style="font-size:.86rem;color:var(--ink-2);padding-left:1.25rem;line-height:1.7">
+        <li>Tu apodo (nickname) elegido al registrarte.</li>
+        <li>Tu contraseña, almacenada de forma cifrada. Nunca se guarda en texto plano.</li>
+        <li>Si ingresas con Google o Microsoft: únicamente tu nombre y correo electrónico.</li>
+        <li>Las publicaciones y comentarios que tú decides compartir en la comunidad.</li>
+        <li>Las fotos que subas a tus publicaciones o como foto de perfil.</li>
+      </ul>
+
+      <h4 style="font-size:.88rem;font-weight:600;margin:.75rem 0 .35rem">¿Qué NO guardamos?</h4>
+      <ul style="font-size:.86rem;color:var(--ink-2);padding-left:1.25rem;line-height:1.7">
+        <li>Datos personales adicionales: teléfono, dirección, fecha de nacimiento.</li>
+        <li>Datos de ubicación ni información de tu dispositivo.</li>
+        <li>No se vende ni comparte información con terceros.</li>
+      </ul>
+
+      <h4 style="font-size:.88rem;font-weight:600;margin:.75rem 0 .35rem">Responsabilidades del usuario</h4>
+      <ul style="font-size:.86rem;color:var(--ink-2);padding-left:1.25rem;line-height:1.7">
+        <li><strong>Tu contraseña es tu responsabilidad.</strong> Elige una contraseña segura y no la compartas. Si la olvidas, deberás contactar a un administrador.</li>
+        <li>El contenido que publiques debe ser respetuoso y apropiado para la comunidad pastoral.</li>
+        <li>Los administradores pueden eliminar publicaciones o usuarios que no cumplan estas normas.</li>
+      </ul>
+
+      <h4 style="font-size:.88rem;font-weight:600;margin:.75rem 0 .35rem">Eliminación de datos</h4>
+      <ul style="font-size:.86rem;color:var(--ink-2);padding-left:1.25rem;line-height:1.7">
+        <li>Puedes eliminar tus publicaciones en cualquier momento desde tu perfil.</li>
+        <li>Al eliminar una publicación, las fotos asociadas también se borran permanentemente.</li>
+        <li>Si solicitas eliminar tu cuenta, se borrarán todos tus datos incluyendo publicaciones, comentarios y fotos.</li>
+      </ul>
+
+      <p style="font-size:.8rem;color:var(--ink-3);margin-top:1rem;border-top:1px solid var(--border);padding-top:.75rem">
+        Esta aplicación utiliza <strong>Supabase</strong> como proveedor de base de datos y autenticación, alojado en servidores seguros. La autenticación con Google y Microsoft es gestionada directamente por esos servicios.
+      </p>
+
+      <div class="sheet-actions" style="margin-top:1rem">
+        <button class="btn btn-primary btn-full" onclick="document.getElementById('modal-policy').classList.add('hidden')">Entendido</button>
+      </div>
+    </div>
   </div>
 
   <script src="js/app.js"></script>
