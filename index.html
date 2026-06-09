@@ -133,16 +133,22 @@
       const errEl = document.getElementById('login-error');
       setLoading(btn, true);
       errEl.classList.add('hidden');
-      const { error } = await signIn(
-        document.getElementById('login-nick').value.trim(),
-        document.getElementById('login-pass').value
-      );
-      if (error) {
-        errEl.innerHTML = '<span>Apodo o contraseña incorrectos. Intenta de nuevo.</span>';
+      try {
+        const { error } = await signIn(
+          document.getElementById('login-nick').value.trim(),
+          document.getElementById('login-pass').value
+        );
+        if (error) {
+          errEl.innerHTML = '<span>Apodo o contraseña incorrectos. Intenta de nuevo.</span>';
+          errEl.classList.remove('hidden');
+          setLoading(btn, false);
+        } else {
+          window.location.href = 'feed.html';
+        }
+      } catch (err) {
+        errEl.innerHTML = '<span>Error de conexión. Recarga la página e intenta de nuevo.</span>';
         errEl.classList.remove('hidden');
         setLoading(btn, false);
-      } else {
-        window.location.href = 'feed.html';
       }
     }
 
@@ -163,19 +169,29 @@
         errEl.classList.remove('hidden'); return;
       }
       setLoading(btn, true);
-      const { error } = await signUp(nick, pass, selectedColor);
-      if (error) {
-        errEl.innerHTML = `<span>${error.message?.includes('already') ? 'Ese apodo ya está en uso. Elige otro.' : 'Error al crear la cuenta. Intenta de nuevo.'}</span>`;
+      try {
+        const { error } = await signUp(nick, pass, selectedColor);
+        if (error) {
+          errEl.innerHTML = `<span>${error.message?.includes('already') || error.message?.includes('unique') ? 'Ese apodo ya está en uso. Elige otro.' : 'Error al crear la cuenta: ' + error.message}</span>`;
+          errEl.classList.remove('hidden');
+          setLoading(btn, false);
+        } else {
+          window.location.href = 'feed.html';
+        }
+      } catch (err) {
+        errEl.innerHTML = '<span>Error de conexión. Recarga la página e intenta de nuevo.</span>';
         errEl.classList.remove('hidden');
         setLoading(btn, false);
-      } else {
-        window.location.href = 'feed.html';
       }
     }
 
     async function handleOAuth(provider) {
-      const { error } = await signInWithProvider(provider);
-      if (error) alert('Error al iniciar sesión: ' + error.message);
+      try {
+        const { error } = await signInWithProvider(provider);
+        if (error) alert('Error al iniciar sesión: ' + error.message);
+      } catch (err) {
+        alert('Error de conexión. Intenta de nuevo.');
+      }
     }
 
     function setLoading(btn, loading) {
@@ -185,8 +201,13 @@
     }
 
     (async () => {
-      const session = await getSession();
-      if (session) window.location.href = 'feed.html';
+      try {
+        const session = await getSession();
+        if (session) window.location.href = 'feed.html';
+      } catch (e) {
+        // Sesión inválida — limpiar estado local y quedar en login
+        await supabase.auth.signOut({ scope: 'local' });
+      }
     })();
   </script>
 </body>
