@@ -6,7 +6,7 @@
   <title>Inicio — Pastoral Familiar</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.min.js" integrity="sha384-p3ppjAbdEPObbT9B8J3Jc/6aBp2Gl54cFACgyZjDVLaR3+KwIc+eeU9V6vqHa/Ml" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
 </head>
 <body>
@@ -145,15 +145,15 @@
 
     function renderNav(p) {
       const av = p.avatar_url
-        ? `<img src="${p.avatar_url}" alt="${escapeHtml(p.nickname)}" />`
+        ? `<img src="${escapeHtml(p.avatar_url)}" alt="${escapeHtml(p.nickname)}" />`
         : p.nickname.charAt(0).toUpperCase();
       document.getElementById('nav-user').innerHTML =
-        `<div class="avatar sm" style="background:${p.color};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
+        `<div class="avatar sm" style="background:${escapeHtml(p.color)};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
       const ma = document.getElementById('modal-avatar');
-      if (p.avatar_url) { ma.innerHTML = `<img src="${p.avatar_url}" />`; } else { ma.textContent = p.nickname.charAt(0).toUpperCase(); }
+      if (p.avatar_url) { ma.innerHTML = `<img src="${escapeHtml(p.avatar_url)}" />`; } else { ma.textContent = p.nickname.charAt(0).toUpperCase(); }
       ma.style.background = p.color;
       const ca = document.getElementById('modal-comment-avatar');
-      if (p.avatar_url) { ca.innerHTML = `<img src="${p.avatar_url}" />`; } else { ca.textContent = p.nickname.charAt(0).toUpperCase(); }
+      if (p.avatar_url) { ca.innerHTML = `<img src="${escapeHtml(p.avatar_url)}" />`; } else { ca.textContent = p.nickname.charAt(0).toUpperCase(); }
       ca.style.background = p.color;
       if (p.is_admin) {
         document.getElementById('btn-admin').classList.remove('hidden');

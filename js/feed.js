@@ -193,7 +193,7 @@ async function submitPost() {
     try {
       imageUrl = await uploadPostImage(window.postImageFile, session.user.id);
     } catch (e) {
-      errEl.innerHTML = `<span>Error al subir la imagen: ${e.message}</span>`;
+      errEl.innerHTML = `<span>Error al subir la imagen: ${escapeHtml(e.message)}</span>`;
       errEl.classList.remove('hidden'); return;
     }
   }

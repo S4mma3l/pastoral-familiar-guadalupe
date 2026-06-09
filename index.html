@@ -6,7 +6,7 @@
   <title>Pastoral Familiar — Parroquia de Guadalupe</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.min.js" integrity="sha384-p3ppjAbdEPObbT9B8J3Jc/6aBp2Gl54cFACgyZjDVLaR3+KwIc+eeU9V6vqHa/Ml" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
 </head>
 <body class="auth-page">
@@ -172,7 +172,7 @@
       try {
         const { error } = await signUp(nick, pass, selectedColor);
         if (error) {
-          errEl.innerHTML = `<span>${error.message?.includes('already') || error.message?.includes('unique') ? 'Ese apodo ya está en uso. Elige otro.' : 'Error al crear la cuenta: ' + error.message}</span>`;
+          errEl.innerHTML = `<span>${error.message?.includes('already') || error.message?.includes('unique') ? 'Ese apodo ya está en uso. Elige otro.' : 'Error al crear la cuenta: ' + escapeHtml(error.message || '')}</span>`;
           errEl.classList.remove('hidden');
           setLoading(btn, false);
         } else {

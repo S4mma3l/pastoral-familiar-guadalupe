@@ -6,7 +6,7 @@
   <title>Admin — Pastoral Familiar</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.min.js" integrity="sha384-p3ppjAbdEPObbT9B8J3Jc/6aBp2Gl54cFACgyZjDVLaR3+KwIc+eeU9V6vqHa/Ml" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
 </head>
 <body>
@@ -71,12 +71,12 @@
             </div>
             <div class="field flex1">
               <label>Título de la sesión *</label>
-              <input id="s-title" type="text" placeholder="Ej: Solemnidad de la Santísima Trinidad" required />
+              <input id="s-title" type="text" placeholder="Ej: Solemnidad de la Santísima Trinidad" maxlength="120" required />
             </div>
           </div>
           <div class="field">
             <label>Descripción breve</label>
-            <input id="s-desc" type="text" placeholder="Un resumen corto para la tarjeta…" />
+            <input id="s-desc" type="text" placeholder="Un resumen corto para la tarjeta…" maxlength="200" />
           </div>
           <div class="field">
             <label>URL del video (YouTube o Vimeo)</label>
@@ -133,7 +133,7 @@
           </div>
           <div class="field flex1">
             <label>Título *</label>
-            <input id="edit-s-title" type="text" required />
+            <input id="edit-s-title" type="text" maxlength="120" required />
           </div>
         </div>
         <div class="field">
