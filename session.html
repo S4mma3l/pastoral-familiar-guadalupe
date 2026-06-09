@@ -65,20 +65,30 @@
     let currentProfile = null;
 
     (async () => {
-      const session = await requireAuth();
-      if (!session) return;
-      currentProfile = await getProfile(session.user.id);
+      try {
+        const session = await requireAuth();
+        if (!session) return;
+        currentProfile = await getProfile(session.user.id);
+        if (!currentProfile) {
+          await supabase.auth.signOut({ scope: 'local' });
+          window.location.replace('index.html');
+          return;
+        }
 
-      const av = currentProfile.avatar_url
-        ? `<img src="${currentProfile.avatar_url}" />`
-        : currentProfile.nickname.charAt(0).toUpperCase();
-      document.getElementById('nav-user').innerHTML =
-        `<div class="avatar sm" style="background:${currentProfile.color};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
+        const av = currentProfile.avatar_url
+          ? `<img src="${currentProfile.avatar_url}" />`
+          : currentProfile.nickname.charAt(0).toUpperCase();
+        document.getElementById('nav-user').innerHTML =
+          `<div class="avatar sm" style="background:${currentProfile.color};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
 
-      const params = new URLSearchParams(window.location.search);
-      const sessionId = params.get('id');
-      if (!sessionId) { window.location.href = 'dashboard.html'; return; }
-      await loadSession(sessionId);
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('id');
+        if (!sessionId) { window.location.href = 'dashboard.html'; return; }
+        await loadSession(sessionId);
+      } catch (err) {
+        document.getElementById('session-main').innerHTML =
+          '<div class="empty-state"><p>Error al cargar la sesión.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="location.reload()">Reintentar</button></div>';
+      }
     })();
 
     async function loadSession(id) {

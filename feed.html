@@ -134,13 +134,23 @@
     window.postImageFile = null;
 
     (async () => {
-      const session = await requireAuth();
-      if (!session) return;
-      currentProfile = await getProfile(session.user.id);
-      renderNav(currentProfile);
-      await loadStories();
-      await loadFeed();
-      subscribeToFeed();
+      try {
+        const session = await requireAuth();
+        if (!session) return;
+        currentProfile = await getProfile(session.user.id);
+        if (!currentProfile) {
+          await supabase.auth.signOut({ scope: 'local' });
+          window.location.replace('index.html');
+          return;
+        }
+        renderNav(currentProfile);
+        await loadStories();
+        await loadFeed();
+        subscribeToFeed();
+      } catch (err) {
+        document.getElementById('feed-list').innerHTML =
+          '<div class="empty-state"><p>Error al cargar el inicio.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="location.reload()">Reintentar</button></div>';
+      }
     })();
 
     function renderNav(p) {

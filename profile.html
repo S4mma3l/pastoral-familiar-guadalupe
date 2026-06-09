@@ -155,30 +155,40 @@
     let pendingAvatarFile = null;
 
     (async () => {
-      const session = await requireAuth();
-      if (!session) return;
-      currentProfile = await getProfile(session.user.id);
+      try {
+        const session = await requireAuth();
+        if (!session) return;
+        currentProfile = await getProfile(session.user.id);
+        if (!currentProfile) {
+          await supabase.auth.signOut({ scope: 'local' });
+          window.location.replace('index.html');
+          return;
+        }
 
-      const params = new URLSearchParams(window.location.search);
-      const targetId = params.get('id') || session.user.id;
-      isSelf = targetId === session.user.id;
+        const params = new URLSearchParams(window.location.search);
+        const targetId = params.get('id') || session.user.id;
+        isSelf = targetId === session.user.id;
 
-      if (!isSelf) document.getElementById('btn-logout').style.display = 'none';
-      if (currentProfile.is_admin) document.getElementById('bnav-admin').classList.remove('hidden');
+        if (!isSelf) document.getElementById('btn-logout').style.display = 'none';
+        if (currentProfile.is_admin) document.getElementById('bnav-admin').classList.remove('hidden');
 
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', targetId).single();
-      if (!profile) { window.location.href = 'feed.html'; return; }
-      viewingProfile = profile;
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', targetId).single();
+        if (!profile) { window.location.href = 'feed.html'; return; }
+        viewingProfile = profile;
 
-      document.title = `${profile.nickname} — Pastoral Familiar`;
-      document.getElementById('nav-profile-title').textContent = profile.nickname;
+        document.title = `${profile.nickname} — Pastoral Familiar`;
+        document.getElementById('nav-profile-title').textContent = profile.nickname;
 
-      const { data: posts } = await supabase
-        .from('posts').select('*').eq('user_id', profile.id).order('created_at', { ascending: false });
-      const postCount = posts?.length || 0;
+        const { data: posts } = await supabase
+          .from('posts').select('*').eq('user_id', profile.id).order('created_at', { ascending: false });
+        const postCount = posts?.length || 0;
 
-      window._profilePosts = posts || [];
-      renderProfile(profile, posts || [], postCount);
+        window._profilePosts = posts || [];
+        renderProfile(profile, posts || [], postCount);
+      } catch (err) {
+        document.getElementById('profile-main').innerHTML =
+          '<div class="empty-state"><p>Error al cargar el perfil.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="location.reload()">Reintentar</button></div>';
+      }
     })();
 
     function avatarHtml(p, cls) {

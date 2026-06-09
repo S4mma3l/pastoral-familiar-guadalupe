@@ -65,20 +65,30 @@
   <script src="js/auth.js"></script>
   <script>
     (async () => {
-      const session = await requireAuth();
-      if (!session) return;
-      const profile = await getProfile(session.user.id);
+      try {
+        const session = await requireAuth();
+        if (!session) return;
+        const profile = await getProfile(session.user.id);
+        if (!profile) {
+          await supabase.auth.signOut({ scope: 'local' });
+          window.location.replace('index.html');
+          return;
+        }
 
-      const av = profile.avatar_url
-        ? `<img src="${profile.avatar_url}" />`
-        : profile.nickname.charAt(0).toUpperCase();
-      document.getElementById('nav-user').innerHTML =
-        `<div class="avatar sm" style="background:${profile.color};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
+        const av = profile.avatar_url
+          ? `<img src="${profile.avatar_url}" />`
+          : profile.nickname.charAt(0).toUpperCase();
+        document.getElementById('nav-user').innerHTML =
+          `<div class="avatar sm" style="background:${profile.color};cursor:pointer" onclick="window.location.href='profile.html'">${av}</div>`;
 
-      document.getElementById('welcome-msg').textContent = `Hola, ${profile.nickname} 👋`;
-      document.getElementById('welcome-card').classList.remove('hidden');
-      if (profile.is_admin) document.getElementById('bnav-admin').classList.remove('hidden');
-      loadSessions();
+        document.getElementById('welcome-msg').textContent = `Hola, ${profile.nickname}`;
+        document.getElementById('welcome-card').classList.remove('hidden');
+        if (profile.is_admin) document.getElementById('bnav-admin').classList.remove('hidden');
+        loadSessions();
+      } catch (err) {
+        document.getElementById('sessions-list').innerHTML =
+          '<div class="empty-state"><p>Error al cargar la página.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="location.reload()">Reintentar</button></div>';
+      }
     })();
 
     async function loadSessions() {
