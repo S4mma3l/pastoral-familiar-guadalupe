@@ -88,6 +88,7 @@ function buildPostCard(post, userId, liked, likeCount, comments, commentCount, s
   const el = document.createElement('div');
   el.className = 'post-card';
   el.id = `post-${post.id}`;
+  el.dataset.ownerId = post.user_id;
   const p = post.profiles || { nickname: '?', color: '#999', avatar_url: null };
   const isOwner = userId === post.user_id;
   const topComment = comments[comments.length - 1];
@@ -173,6 +174,11 @@ async function togglePostLike(postId) {
     iconEl.innerHTML = SVG_HEART_FILL;
     const n = parseInt(countEl.textContent || '0') + 1;
     countEl.textContent = n;
+    const card = document.getElementById(`post-${postId}`);
+    const ownerId = card?.dataset.ownerId;
+    if (ownerId && typeof insertNotification === 'function') {
+      insertNotification('like', postId, ownerId, null);
+    }
   }
 }
 
@@ -283,6 +289,11 @@ async function submitPostComment() {
   const { data: { session } } = await supabase.auth.getSession();
   await supabase.from('post_comments').insert({ post_id: activePostId, user_id: session.user.id, content });
   input.value = '';
+  const card = document.getElementById(`post-${activePostId}`);
+  const ownerId = card?.dataset.ownerId;
+  if (ownerId && typeof insertNotification === 'function') {
+    insertNotification('comment', activePostId, ownerId, content.substring(0, 100));
+  }
   await loadPostComments(activePostId);
   await loadFeed();
 }

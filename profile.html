@@ -18,7 +18,7 @@
       </button>
       <span class="nav-title" id="nav-profile-title">Perfil</span>
     </div>
-    <div class="nav-actions">
+    <div class="nav-actions" id="profile-nav-actions">
       <button class="btn-icon-circle" id="btn-logout" title="Cerrar sesión" onclick="handleLogout()">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
@@ -147,6 +147,7 @@
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/notifications.js"></script>
   <script>
     let currentProfile = null;
     let viewingProfile = null;
@@ -172,6 +173,15 @@
         if (!isSelf) document.getElementById('btn-logout').style.display = 'none';
         if (currentProfile.is_admin) document.getElementById('bnav-admin').classList.remove('hidden');
 
+        if (isSelf) {
+          const bellWrap = document.createElement('div');
+          bellWrap.id = 'notif-bell-wrap';
+          bellWrap.style.cssText = 'display:flex;align-items:center;margin-right:.25rem';
+          renderNotificationBell(session.user.id, bellWrap);
+          const navActions = document.getElementById('profile-nav-actions');
+          navActions.insertBefore(bellWrap, navActions.firstChild);
+        }
+
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', targetId).single();
         if (!profile) { window.location.href = 'feed.html'; return; }
         viewingProfile = profile;
@@ -179,12 +189,33 @@
         document.title = `${profile.nickname} — Pastoral Familiar`;
         document.getElementById('nav-profile-title').textContent = profile.nickname;
 
-        const { data: posts } = await supabase
-          .from('posts').select('*').eq('user_id', profile.id).order('created_at', { ascending: false });
-        const postCount = posts?.length || 0;
+        const [postsRes, likesRes] = await Promise.all([
+          supabase.from('posts').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }),
+          supabase.from('post_likes').select('post_id').in(
+            'post_id',
+            (await supabase.from('posts').select('id').eq('user_id', profile.id)).data?.map(p => p.id) || []
+          )
+        ]);
 
-        window._profilePosts = posts || [];
-        renderProfile(profile, posts || [], postCount);
+        const posts = postsRes.data || [];
+        const totalLikes = likesRes.data?.length || 0;
+
+        const postIds = posts.map(p => p.id);
+        let likeCountsMap = {};
+        let commentCountsMap = {};
+        if (postIds.length) {
+          const [allLikes, allComments] = await Promise.all([
+            supabase.from('post_likes').select('post_id').in('post_id', postIds),
+            supabase.from('post_comments').select('post_id').in('post_id', postIds)
+          ]);
+          (allLikes.data || []).forEach(l => { likeCountsMap[l.post_id] = (likeCountsMap[l.post_id] || 0) + 1; });
+          (allComments.data || []).forEach(c => { commentCountsMap[c.post_id] = (commentCountsMap[c.post_id] || 0) + 1; });
+        }
+
+        window._profilePosts = posts;
+        window._profileLikeCounts = likeCountsMap;
+        window._profileCommentCounts = commentCountsMap;
+        renderProfile(profile, posts, totalLikes);
       } catch (err) {
         document.getElementById('profile-main').innerHTML =
           '<div class="empty-state"><p>Error al cargar el perfil.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="location.reload()">Reintentar</button></div>';
@@ -197,10 +228,16 @@
         : `<div class="avatar ${cls}" style="background:${p.color}">${p.nickname.charAt(0).toUpperCase()}</div>`;
     }
 
-    function renderProfile(profile, posts, postCount) {
+    function renderProfile(profile, posts, totalLikes) {
       const main = document.getElementById('profile-main');
+      const postCount = posts.length;
+      const likeCounts = window._profileLikeCounts || {};
+      const commentCounts = window._profileCommentCounts || {};
+
       main.innerHTML = `
-        <div class="profile-cover"></div>
+        <div class="profile-cover">
+          <div class="profile-cover-pattern"></div>
+        </div>
         <div class="profile-avatar-wrap">
           ${isSelf
             ? `<div class="profile-avatar-edit-btn" onclick="openEditModal()">
@@ -218,7 +255,7 @@
 
         <div class="profile-info">
           <div class="profile-nick">${escapeHtml(profile.nickname)}</div>
-          ${profile.bio ? `<div class="profile-bio">${escapeHtml(profile.bio)}</div>` : isSelf ? `<div class="profile-bio" style="font-style:italic;color:var(--ink-3)">Agrega una biografía…</div>` : ''}
+          ${profile.bio ? `<div class="profile-bio">${escapeHtml(profile.bio)}</div>` : isSelf ? `<div class="profile-bio profile-bio-empty" onclick="openEditModal()">Agrega una biografía…</div>` : ''}
           ${profile.is_admin ? `<div class="profile-admin-badge">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
             Coordinador
@@ -226,9 +263,14 @@
         </div>
 
         <div class="profile-stats">
-          <div>
+          <div class="stat-item">
             <div class="stat-num">${postCount}</div>
             <div class="stat-label">publicaciones</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-num">${totalLikes}</div>
+            <div class="stat-label">me gustas</div>
           </div>
         </div>
 
@@ -239,12 +281,21 @@
                ${isSelf ? '<button class="btn btn-primary" style="margin-top:1rem" onclick="openNewPostModal()">Crear primera publicación</button>' : ''}
              </div>`
           : `<div class="profile-grid" id="profile-grid">
-               ${posts.map(p =>
-                 `<div class="profile-grid-tile" onclick="openPostDetail('${p.id}')">
+               ${posts.map(p => {
+                 const lc = likeCounts[p.id] || 0;
+                 const cc = commentCounts[p.id] || 0;
+                 const overlay = (lc || cc) ? `
+                   <div class="grid-tile-overlay">
+                     ${lc ? `<span><svg viewBox="0 0 24 24" width="12" height="12" fill="#fff" stroke="#fff" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${lc}</span>` : ''}
+                     ${cc ? `<span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${cc}</span>` : ''}
+                   </div>` : '';
+                 return `<div class="profile-grid-tile" onclick="openPostDetail('${p.id}')">
                    ${p.image_url
                      ? `<img src="${escapeHtml(p.image_url)}" alt="post" loading="lazy" onerror="this.style.display='none'" />`
                      : `<div class="profile-grid-text-tile">${escapeHtml(p.content.substring(0, 80))}${p.content.length > 80 ? '…' : ''}</div>`}
-                 </div>`).join('')}
+                   ${overlay}
+                 </div>`;
+               }).join('')}
              </div>`}
       `;
     }

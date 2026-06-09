@@ -792,3 +792,75 @@ hr.divider{border:none;border-top:1px solid var(--line);margin:.5rem 0}
 @media(prefers-reduced-motion:reduce){
   .post-card,.content-card,.admin-card,.session-list-card{animation:none;opacity:1;transform:none}
 }
+
+/* ─── PROFILE IMPROVEMENTS ───────────────────────────────── */
+.profile-cover{
+  height:140px;
+  background:linear-gradient(135deg,var(--p-light) 0%,var(--p-dark) 60%,#EC4899 100%);
+  position:relative;overflow:hidden;
+}
+.profile-cover-pattern{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle at 20% 50%,rgba(255,255,255,.12) 0%,transparent 50%),
+    radial-gradient(circle at 80% 20%,rgba(255,255,255,.10) 0%,transparent 40%);
+}
+.profile-stats{
+  display:flex;align-items:center;gap:0;
+  padding:.85rem 1rem .75rem;border-bottom:1px solid var(--line);
+}
+.stat-item{flex:1;text-align:center}
+.stat-divider{width:1px;height:32px;background:var(--line-2);flex-shrink:0}
+.stat-num{font-size:1.25rem;font-weight:800;color:var(--ink);letter-spacing:-.5px}
+.stat-label{font-size:.72rem;color:var(--ink-3);margin-top:.1rem}
+.profile-bio-empty{font-style:italic;color:var(--ink-3);cursor:pointer}
+.profile-bio-empty:hover{color:var(--p)}
+
+.grid-tile-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 55%);
+  display:flex;align-items:flex-end;gap:.55rem;
+  padding:.4rem .5rem;opacity:0;transition:opacity .18s;
+}
+.profile-grid-tile:hover .grid-tile-overlay,
+.profile-grid-tile:active .grid-tile-overlay{opacity:1}
+.grid-tile-overlay span{
+  display:flex;align-items:center;gap:.25rem;
+  font-size:.72rem;font-weight:700;color:#fff;line-height:1;
+}
+
+/* ─── NOTIFICATION BELL ──────────────────────────────────── */
+.notif-bell{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(var(--p-rgb),.08);border:none;cursor:pointer;
+  transition:background .15s;
+}
+.notif-bell:hover{background:rgba(var(--p-rgb),.14)}
+.notif-bell svg{stroke:var(--ink-2)}
+.notif-badge{
+  position:absolute;top:2px;right:2px;
+  min-width:17px;height:17px;border-radius:50px;
+  background:#E53935;color:#fff;
+  font-size:.6rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 3px;border:2px solid var(--bg-card,#fff);
+  line-height:1;
+}
+
+/* ─── NOTIFICATION SHEET ─────────────────────────────────── */
+.notif-row{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.7rem .25rem;border-bottom:1px solid var(--line);
+  cursor:pointer;transition:background .12s;border-radius:var(--r2);
+  margin:0 -.25rem;padding:.7rem .5rem;
+}
+.notif-row:hover{background:var(--bg-input)}
+.notif-row:last-child{border-bottom:none}
+.notif-unread{background:rgba(var(--p-rgb),.05)}
+.notif-unread:hover{background:rgba(var(--p-rgb),.09)}
+.notif-body{flex:1;min-width:0}
+.notif-msg{font-size:.86rem;color:var(--ink);line-height:1.45}
+.notif-msg strong{font-weight:700}
+.notif-msg em{color:var(--ink-2);font-style:italic}
+.notif-time{font-size:.73rem;color:var(--ink-3);margin-top:.2rem}
+.notif-type-icon{font-size:.9rem;flex-shrink:0;opacity:.7}
