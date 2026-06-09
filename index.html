@@ -270,8 +270,8 @@
         const session = await getSession();
         if (session) window.location.href = 'feed.html';
       } catch (e) {
-        // Sesión inválida — limpiar estado local y quedar en login
-        await supabase.auth.signOut({ scope: 'local' });
+        // El SDK ya limpia la sesión inválida internamente; no llamar signOut
+        // para no bloquear el lock de auth cuando el usuario hace clic en OAuth
       }
     })();
   </script>
