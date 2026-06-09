@@ -1,6 +1,43 @@
 // Logic for admin.html
 
 let adminSessionsMap = {};
+let pendingCoverFile = null;
+let pendingEditCoverFile = null;
+let editingCurrentCoverUrl = null;
+
+// ── Cover image picker helpers ────────────────────────────
+
+async function pickCoverImage(mode) {
+  const file = await pickImage('image/*');
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  if (mode === 'create') {
+    pendingCoverFile = file;
+    document.getElementById('s-cover-preview').src = url;
+    document.getElementById('s-cover-preview-wrap').classList.remove('hidden');
+    document.getElementById('s-cover-zone').classList.add('hidden');
+  } else {
+    pendingEditCoverFile = file;
+    document.getElementById('edit-s-cover-preview').src = url;
+    document.getElementById('edit-s-cover-preview-wrap').classList.remove('hidden');
+    document.getElementById('edit-s-cover-zone').classList.add('hidden');
+  }
+}
+
+function removeCoverImage(mode) {
+  if (mode === 'create') {
+    pendingCoverFile = null;
+    document.getElementById('s-cover-preview').src = '';
+    document.getElementById('s-cover-preview-wrap').classList.add('hidden');
+    document.getElementById('s-cover-zone').classList.remove('hidden');
+  } else {
+    pendingEditCoverFile = null;
+    editingCurrentCoverUrl = null;
+    document.getElementById('edit-s-cover-preview').src = '';
+    document.getElementById('edit-s-cover-preview-wrap').classList.add('hidden');
+    document.getElementById('edit-s-cover-zone').classList.remove('hidden');
+  }
+}
 
 async function loadAdminSessions() {
   const { data } = await supabase
@@ -35,7 +72,9 @@ async function loadAdminSessions() {
 
     row.innerHTML = `
       <div class="session-row-head">
-        <span class="session-row-emoji">${s.cover_emoji || '✝️'}</span>
+        ${s.cover_image_url
+          ? `<img class="session-row-thumb" src="${escapeHtml(s.cover_image_url)}" alt="" loading="lazy" />`
+          : `<span class="session-row-emoji">${s.cover_emoji || '✝️'}</span>`}
         <span class="session-row-title">${escapeHtml(s.title)}</span>
         <div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0">
           <button class="btn-edit-session" onclick="openEditSessionModal('${s.id}')">
@@ -72,6 +111,20 @@ function openEditSessionModal(sessionId) {
   document.getElementById('edit-s-video').value = s.video_url || '';
   document.getElementById('edit-s-content').value = htmlToText(s.document_content);
   document.getElementById('edit-session-error').classList.add('hidden');
+
+  // Reset cover image state
+  pendingEditCoverFile = null;
+  editingCurrentCoverUrl = s.cover_image_url || null;
+  if (s.cover_image_url) {
+    document.getElementById('edit-s-cover-preview').src = s.cover_image_url;
+    document.getElementById('edit-s-cover-preview-wrap').classList.remove('hidden');
+    document.getElementById('edit-s-cover-zone').classList.add('hidden');
+  } else {
+    document.getElementById('edit-s-cover-preview').src = '';
+    document.getElementById('edit-s-cover-preview-wrap').classList.add('hidden');
+    document.getElementById('edit-s-cover-zone').classList.remove('hidden');
+  }
+
   document.getElementById('modal-edit-session').classList.remove('hidden');
 }
 
@@ -85,12 +138,32 @@ async function handleUpdateSession(e) {
   const id = document.getElementById('edit-s-id').value;
   const rawContent = document.getElementById('edit-s-content').value;
 
+  // Determine new cover_image_url
+  let newCoverUrl = editingCurrentCoverUrl;
+  if (pendingEditCoverFile) {
+    try {
+      const oldUrl = adminSessionsMap[id]?.cover_image_url;
+      newCoverUrl = await uploadSessionCover(pendingEditCoverFile, id);
+      if (oldUrl && oldUrl !== newCoverUrl) await deleteStorageFile(oldUrl);
+    } catch (_) {
+      errEl.textContent = 'Error al subir la imagen. Intenta de nuevo.';
+      errEl.classList.remove('hidden');
+      btn.disabled = false;
+      return;
+    }
+  } else if (editingCurrentCoverUrl === null && adminSessionsMap[id]?.cover_image_url) {
+    // User explicitly removed the image
+    await deleteStorageFile(adminSessionsMap[id].cover_image_url);
+    newCoverUrl = null;
+  }
+
   const { error } = await supabase.from('sessions').update({
     title:            document.getElementById('edit-s-title').value.trim(),
     description:      document.getElementById('edit-s-desc').value.trim() || null,
     video_url:        document.getElementById('edit-s-video').value.trim() || null,
     document_content: textToHtml(rawContent),
     cover_emoji:      document.getElementById('edit-s-emoji').value.trim() || '✝️',
+    cover_image_url:  newCoverUrl,
   }).eq('id', id);
 
   btn.disabled = false;
@@ -100,8 +173,9 @@ async function handleUpdateSession(e) {
     return;
   }
 
+  pendingEditCoverFile = null;
   document.getElementById('modal-edit-session').classList.add('hidden');
-  if (typeof showToast === 'function') showToast('Sesión actualizada ✓');
+  if (typeof showToast === 'function') showToast('Sesión actualizada');
   await loadAdminSessions();
 }
 
@@ -118,14 +192,14 @@ async function handleCreateSession(e) {
   errEl.classList.add('hidden');
 
   const rawContent = document.getElementById('s-content').value;
-  const { error } = await supabase.from('sessions').insert({
+  const { data: newSession, error } = await supabase.from('sessions').insert({
     title: document.getElementById('s-title').value.trim(),
     description: document.getElementById('s-desc').value.trim() || null,
     video_url: document.getElementById('s-video').value.trim() || null,
     document_content: textToHtml(rawContent),
     cover_emoji: document.getElementById('s-emoji').value.trim() || '✝️',
     created_by: adminProfile.id
-  });
+  }).select().single();
 
   btn.disabled = false;
   if (error) {
@@ -134,6 +208,20 @@ async function handleCreateSession(e) {
     return;
   }
 
+  // Upload cover image if selected
+  if (pendingCoverFile && newSession) {
+    try {
+      const coverUrl = await uploadSessionCover(pendingCoverFile, newSession.id);
+      await supabase.from('sessions').update({ cover_image_url: coverUrl }).eq('id', newSession.id);
+    } catch (_) {
+      if (typeof showToast === 'function') showToast('Sesión creada, pero la imagen no se pudo subir.');
+    }
+  }
+
+  pendingCoverFile = null;
+  document.getElementById('s-cover-preview').src = '';
+  document.getElementById('s-cover-preview-wrap').classList.add('hidden');
+  document.getElementById('s-cover-zone').classList.remove('hidden');
   document.getElementById('form-session').reset();
   document.getElementById('s-emoji').value = '✝️';
   await loadAdminSessions();
@@ -204,6 +292,7 @@ function deleteSessionConfirm(sessionId) {
     danger: true
   }, async () => {
     document.getElementById('modal-edit-session').classList.add('hidden');
+    const coverUrl = adminSessionsMap[sessionId]?.cover_image_url;
     const { data: acts } = await supabase.from('activities').select('id').eq('session_id', sessionId);
     if (acts?.length) {
       const ids = acts.map(a => a.id);
@@ -212,6 +301,7 @@ function deleteSessionConfirm(sessionId) {
     }
     await supabase.from('comments').delete().eq('session_id', sessionId);
     await supabase.from('sessions').delete().eq('id', sessionId);
+    if (coverUrl && typeof deleteStorageFile === 'function') await deleteStorageFile(coverUrl);
     if (typeof showToast === 'function') showToast('Sesión eliminada');
     await loadAdminSessions();
   });

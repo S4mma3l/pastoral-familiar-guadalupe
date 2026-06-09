@@ -88,12 +88,16 @@
       const empty = document.getElementById('no-sessions');
       list.innerHTML = '';
       if (error || !data?.length) { empty.classList.remove('hidden'); return; }
-      data.forEach(s => {
+      data.forEach((s, i) => {
         const card = document.createElement('div');
         card.className = 'session-list-card';
+        card.style.animationDelay = `${i * 0.05}s`;
         card.onclick = () => window.location.href = `session.html?id=${s.id}`;
+        const coverHtml = s.cover_image_url
+          ? `<img class="session-card-cover" src="${escapeHtml(s.cover_image_url)}" alt="" loading="lazy" />`
+          : `<div class="session-card-emoji">${s.cover_emoji || '✝️'}</div>`;
         card.innerHTML = `
-          <div class="session-card-emoji">${s.cover_emoji || '✝️'}</div>
+          ${coverHtml}
           <div class="session-card-body">
             <div class="session-card-title">${escapeHtml(s.title)}</div>
             ${s.description ? `<div class="session-card-desc">${escapeHtml(s.description)}</div>` : ''}

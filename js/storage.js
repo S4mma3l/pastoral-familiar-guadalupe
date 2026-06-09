@@ -48,6 +48,11 @@ async function uploadPostImage(file, userId) {
   return uploadImage(file, 'post-images', userId);
 }
 
+// Upload session cover image (admins only)
+async function uploadSessionCover(file, sessionId) {
+  return uploadImage(file, 'session-covers', sessionId);
+}
+
 // Delete a file from Supabase Storage given its public URL
 async function deleteStorageFile(url) {
   if (!url || !url.includes('/storage/v1/object/public/')) return;

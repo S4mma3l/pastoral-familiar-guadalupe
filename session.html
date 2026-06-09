@@ -96,14 +96,28 @@
         ? `<img src="${currentProfile.avatar_url}" />`
         : currentProfile.nickname.charAt(0).toUpperCase();
 
-      const main = document.getElementById('session-main');
-      main.innerHTML = `
-        <!-- HERO -->
+      const heroHtml = s.cover_image_url ? `
+        <div class="session-hero has-image">
+          <img class="session-hero-bg-img" src="${escapeHtml(s.cover_image_url)}" alt="" />
+          <div class="session-hero-overlay"></div>
+          <div class="session-hero-content">
+            ${s.cover_emoji ? `<div class="session-hero-emoji">${s.cover_emoji}</div>` : ''}
+            <h1 class="session-hero-title">${escapeHtml(s.title)}</h1>
+            ${s.description ? `<p class="session-hero-desc">${escapeHtml(s.description)}</p>` : ''}
+          </div>
+        </div>
+      ` : `
         <div class="session-hero">
           <div class="session-hero-emoji">${s.cover_emoji || '✝️'}</div>
           <h1 class="session-hero-title">${escapeHtml(s.title)}</h1>
           ${s.description ? `<p class="session-hero-desc">${escapeHtml(s.description)}</p>` : ''}
         </div>
+      `;
+
+      const main = document.getElementById('session-main');
+      main.innerHTML = `
+        <!-- HERO -->
+        ${heroHtml}
 
         <!-- VIDEO -->
         ${s.video_url ? `
