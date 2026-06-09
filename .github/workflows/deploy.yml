@@ -24,19 +24,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject secrets into config
+      - name: Inject secrets and cache-bust JS references
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           python3 - <<'EOF'
-          import os
+          import os, glob, re
+
+          # 1. Inject Supabase credentials into config.js
           with open('js/config.js', 'r') as f:
               content = f.read()
           content = content.replace('__SUPABASE_URL__', os.environ['SUPABASE_URL'].strip())
           content = content.replace('__SUPABASE_ANON_KEY__', os.environ['SUPABASE_ANON_KEY'].strip())
           with open('js/config.js', 'w') as f:
               f.write(content)
+
+          # 2. Add/replace ?v=<commit-sha> on all local JS references in HTML files
+          #    so browsers always load the latest code after each deploy.
+          sha = os.environ['GITHUB_SHA'][:8]
+          html_files = glob.glob('*.html')
+          js_pattern = re.compile(r'(src="js/[^"?]+)((?:\?v=[^"]*)?)"')
+          for path in html_files:
+              with open(path, 'r') as f:
+                  html = f.read()
+              new_html = js_pattern.sub(rf'\1?v={sha}"', html)
+              if new_html != html:
+                  with open(path, 'w') as f:
+                      f.write(new_html)
+                  print(f'Cache-busted: {path}')
           EOF
 
       - name: Setup Pages
